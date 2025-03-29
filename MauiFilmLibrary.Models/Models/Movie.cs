@@ -17,13 +17,6 @@ public partial class Movie
 
     public virtual ICollection<MoviePersonRole> MoviePersonRoles { get; set; } = new List<MoviePersonRole>();
 
-    public virtual ICollection<Genre> Geners { get; set; } = new List<Genre>();
+    public virtual ICollection<GenreMovie> GenreMovies { get; set; } = new List<GenreMovie>();
 
-    public string GenresText => Geners != null && Geners.Any()
-        ? string.Join(", ", Geners.Select(g => g.GenreName))
-        : "Неизвестный жанр";
-
-    public string ActorsText => MoviePersonRoles != null && MoviePersonRoles.Any()
-        ? string.Join(", ", MoviePersonRoles.Select(mpr => mpr.Person.PersonName))
-        : "Неизвестные актёры";
 }

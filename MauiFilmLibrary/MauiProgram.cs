@@ -3,6 +3,7 @@ using MauiFilmLibrary.View;
 using MauiFilmLibrary.Model;
 using MauiFilmLibrary.ViewModel;
 using MauiFilmLibrary.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MauiFilmLibrary
 {
@@ -47,7 +48,8 @@ namespace MauiFilmLibrary
             builder.Services.AddSingleton<AppShell>();
 
             builder.Services.AddTransient<SearchViewModel>();
-            builder.Services.AddTransient<MovieViewModel>();
+            builder.Services.AddTransient<Func<MovieDto, MovieViewModel>>(sp =>
+                (dto) => new MovieViewModel(dto, sp));
 
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<MovieView>(); 

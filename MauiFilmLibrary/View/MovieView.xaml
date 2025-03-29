@@ -3,13 +3,13 @@
              x:Class="MauiFilmLibrary.View.MovieView">
 
     <VerticalStackLayout Padding="20">
-        <Image Source="{Binding Movie.TitleImg}" HeightRequest="300" Aspect="AspectFit"/>
-        <Label Text="{Binding Movie.Title}" FontSize="24" FontAttributes="Bold" />
-        <Label Text="{Binding Movie.GenresText}" FontSize="18" />
-        <Label Text="{Binding Movie.Description}" FontSize="16" />
-        <Label Text="{Binding Movie.ActorsText}" FontSize="16" />
-        <Label Text="{Binding Movie.ReleaseYear}" FontSize="16" />
-        <Button Text="Назад" Command="{Binding BackCommand}" BackgroundColor="Gray" TextColor="White"/>
+        <Image Source="{Binding TitleImg}" HeightRequest="300" Aspect="AspectFit"/>
+        <Label Text="{Binding Title}" FontSize="24" FontAttributes="Bold" />
+        <Label Text="{Binding Genres}" FontSize="18" />
+        <Label Text="{Binding Description}" FontSize="16" />
+        <Label Text="{Binding Actors}" FontSize="16" />
+        <Label Text="{Binding ReleaseYear}" FontSize="16" />
+        <Button Text="Назад" Command="{Binding CloseCommand}" BackgroundColor="Gray" TextColor="White"/>
     </VerticalStackLayout>
 
 </ContentPage>

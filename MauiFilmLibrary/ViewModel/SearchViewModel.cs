@@ -2,28 +2,31 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using MauiFilmLibrary.Models;
+using MauiFilmLibrary.Model;
 using MauiFilmLibrary.View;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MauiFilmLibrary.ViewModel
 {
-    public class SearchViewModel : INotifyPropertyChanged
+    public class SearchViewModel : BaseViewModel
     {
         private readonly int _searchQuantity = 5;
         private readonly Model.MovieService _movieService;
+        private readonly IServiceProvider _serviceProvider;
+
         private string _searchQuery;
         private bool _isMoviePageVisible = false;
-        
-        private ObservableCollection<Movie> _suggestions = new();
-        public ObservableCollection<Movie> Movies { get; set; } = new();
-        public ObservableCollection<Movie> Suggestions
+        private ObservableCollection<MovieViewModel> _suggestions = new();
+
+        public ObservableCollection<MovieViewModel> Movies { get; private set; } = new();
+        public ObservableCollection<MovieViewModel> Suggestions
         {
             get => _suggestions;
-            set { _suggestions = value; OnPropertyChanged(); }
+            private set { _suggestions = value; OnPropertyChanged(); }
         }
+
         public ICommand SearchCommand { get; }
         public ICommand CloseMovieCommand { get; }
-        public ICommand OpenMovieCommand { get; }
         public bool IsMoviePageVisible
         {
             get => _isMoviePageVisible;
@@ -40,31 +43,30 @@ namespace MauiFilmLibrary.ViewModel
                 UpdateSuggestions();
             }
         }
-        public SearchViewModel(Model.MovieService movieService) //рег комманд
+
+        public SearchViewModel(Model.MovieService movieService, IServiceProvider serviceProvider)
         {
             _movieService = movieService;
+            _serviceProvider = serviceProvider;
+
             SearchCommand = new Command(async () => await SearchMoviesAsync());
             CloseMovieCommand = new Command(() => IsMoviePageVisible = false);
-            OpenMovieCommand = new Command<Movie>(async (movie) => await OpenMovie(movie));
         }
 
         private async Task SearchMoviesAsync()
         {
+            if(SearchQuery == null)
+                return;
             var movies = await _movieService.SearchMoviesAsync(SearchQuery);
             Movies.Clear();
             IsMoviePageVisible = false;
 
-            foreach (var movie in movies)
+            var movieViewModelFactory = _serviceProvider.GetRequiredService<Func<MovieDto, MovieViewModel>>();
+
+            foreach (var movieDto in movies)
             {
-                Movies.Add(movie);
+                Movies.Add(movieViewModelFactory(movieDto));
             }
-        }
-
-        private async Task OpenMovie(Movie movie)
-        {
-            if (movie == null) return;
-
-            await Application.Current.MainPage.Navigation.PushAsync(new MovieView(movie));
         }
 
         public async Task UpdateSuggestions()
@@ -78,17 +80,14 @@ namespace MauiFilmLibrary.ViewModel
             var movies = await _movieService.SearchMoviesAsync(SearchQuery, _searchQuantity);
 
             Suggestions.Clear();
-            foreach (var movie in movies)
+
+            var movieViewModelFactory = _serviceProvider.GetRequiredService<Func<MovieDto, MovieViewModel>>();
+
+            foreach (var movieDto in movies)
             {
-                Suggestions.Add(movie);
-            }
-        }
-
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                Suggestions.Add(movieViewModelFactory(movieDto));
+            }   
         }
     }
+
 }

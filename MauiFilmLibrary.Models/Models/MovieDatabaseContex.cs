@@ -82,6 +82,7 @@ public partial class MovieDatabaseContext : DbContext
     public virtual DbSet<Person> People { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
+    public virtual DbSet<GenreMovie> GenreMovies { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -94,20 +95,26 @@ public partial class MovieDatabaseContext : DbContext
             entity.Property(e => e.GenreId).HasColumnName("genre_id");
             entity.Property(e => e.GenreName).HasColumnName("genre_name");
 
-            entity.HasMany(d => d.Movies).WithMany(p => p.Geners)
-                .UsingEntity<Dictionary<string, object>>(
-                    "GenreMovie",
-                    r => r.HasOne<Movie>().WithMany().HasForeignKey("MovieId"),
-                    l => l.HasOne<Genre>().WithMany()
-                        .HasForeignKey("GenerId")
-                        .OnDelete(DeleteBehavior.ClientSetNull),
-                    j =>
-                    {
-                        j.HasKey("GenerId", "MovieId");
-                        j.ToTable("genre_movie");
-                        j.IndexerProperty<int>("GenerId").HasColumnName("gener_id");
-                        j.IndexerProperty<int>("MovieId").HasColumnName("movie_id");
-                    });
+        });
+
+        modelBuilder.Entity<GenreMovie>(entity =>
+        {
+            entity.ToTable("genre_movie");
+
+            entity.HasKey(e => new { e.GenreId, e.MovieId });
+
+            entity.Property(e => e.GenreId).HasColumnName("gener_id");
+            entity.Property(e => e.MovieId).HasColumnName("movie_id");
+
+            entity.HasOne(e => e.Movie)
+                  .WithMany(m => m.GenreMovies)
+                  .HasForeignKey(e => e.MovieId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Genre)
+                  .WithMany(g => g.GenreMovies)
+                  .HasForeignKey(e => e.GenreId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Movie>(entity =>

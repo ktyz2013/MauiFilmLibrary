@@ -4,10 +4,10 @@ namespace MauiFilmLibrary.View
 {
     public partial class MainPage : ContentPage
     {
-        public MainPage(SearchViewModel viewModel)
+        public MainPage(SearchViewModel searchViewModel)
         {
             InitializeComponent();
-            BindingContext = viewModel;
+            BindingContext = searchViewModel;
         }
         private void SearchEntry_Focused(object sender, FocusEventArgs e)
         {
