@@ -33,9 +33,11 @@ namespace MauiFilmLibrary.ViewModel
             Title = dto.Title ?? "Неизвестное название";
             Description = dto.Description ?? "Нет описания";
             ReleaseYear = dto.ReleaseYear?.ToString() ?? "Неизвестная дата";
-            TitleImg = dto.TitleImg != null ? ImageSource.FromStream(() => new MemoryStream(dto.TitleImg)) : null;
+            TitleImg = dto.TitleImg != null
+                ? ImageSource.FromStream(() => new MemoryStream(dto.TitleImg))
+                : ImageSource.FromFile("not_found.png");
             Genres = dto.GenresDto.Any() ? string.Join(", ", dto.GenresDto.Select(g => g.GenreName)) : "Неизвестный жанр";
-            Actors = dto.PersonDto.Any() ? string.Join(", ", dto.PersonDto.Select(p => $"{p.PersonName} ({p.PersonRole})")) : "Неизвестные актёры";
+            Actors = dto.PersonDto.Any() ? string.Join(", ", dto.PersonDto.Select(p => p.PersonName)) : "Неизвестные актёры";
 
             OpenMovieCommand = new Command<int>(async (movieId) => await OpenMovie(movieId));
         }

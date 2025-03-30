@@ -4,7 +4,8 @@
     {
         public App(MainPage mainPage)
         {
-            InitializeComponent();  
+            InitializeComponent();
+            Application.Current.UserAppTheme = AppTheme.Light;
             MainPage = new NavigationPage(mainPage);
         }
     }

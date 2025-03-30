@@ -60,7 +60,6 @@ namespace MauiFilmLibrary.Model
             };
         }
 
-
         public async Task<List<MovieDto>> SearchMoviesAsync(string searchQuery, int limit = int.MaxValue)
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
@@ -86,8 +85,6 @@ namespace MauiFilmLibrary.Model
                 {
                     m.MovieId,
                     m.Title,
-                    m.TitleImg,
-                    m.ReleaseYear,
                     Genres = m.GenreMovies
                         .Select(gm => gm.Genre.GenreName)
                         .ToList(),
@@ -108,8 +105,6 @@ namespace MauiFilmLibrary.Model
             {
                 MovieId = m.MovieId,
                 Title = m.Title,
-                TitleImg = m.TitleImg,
-                ReleaseYear = m.ReleaseYear,
                 GenresDto = m.Genres.Select(gName => new GenerDto { GenreName = gName }).ToList(),
                 PersonDto = m.Persons.Select(p => new PersonDto
                 {

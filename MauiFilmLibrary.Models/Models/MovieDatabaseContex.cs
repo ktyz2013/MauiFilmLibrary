@@ -17,6 +17,11 @@ public partial class MovieDatabaseContext : DbContext
         Initialize();
     }
 
+    public MovieDatabaseContext(DbContextOptions<MovieDatabaseContext> options)
+    : base(options)
+    {
+    }
+
     ///<summary>
     ///Constructor for mobile app
     ///</summary>
