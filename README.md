@@ -70,7 +70,7 @@ FROM movie m
 WHERE m.movie_id = 1;
 ```
 linq выражение отвечающие за нахождения фильмов по названию, имени актеров и жанру
-```С#
+```c#
 var moviesData = await _dbContext.Movies
     .AsNoTracking()
     .Include(m => m.GenreMovies)
