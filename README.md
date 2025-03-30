@@ -21,47 +21,103 @@
 
 ## Sql запросы
 
-linq выражение отвечающий за поиск фильма 
+linq выражение отвечающее за поиск фильма (поиск фильма по id для дальнейшего открытия во view)
 
 ```c#
-public async Task<List<Movie>> SearchMoviesAsync(string searchQuery)
-{
-    var searchTerms = searchQuery.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-    return await _dbContext.Movies
-        .Include(m => m.Geners)
-        .Include(m => m.MoviePersonRoles)
-            .ThenInclude(mpr => mpr.Person)
-        .Where(m => searchTerms.All(term =>
-            m.Title.ToLower().Contains(term) ||
-            m.MoviePersonRoles.Any(mpr => mpr.Person.PersonName.ToLower().Contains(term)) ||
-            m.Geners.Any(g => g.GenreName.ToLower().Contains(term))))
-        .ToListAsync();
-}
+var movieData = await _dbContext.Movies
+    .AsNoTracking()
+    .Where(m => m.MovieId == movieId)
+    .Select(m => new
+    {
+        m.MovieId,
+        m.Title,
+        m.Description,
+        m.ReleaseYear,
+        m.TitleImg,
+        Genres = m.GenreMovies
+            .Select(gm => gm.Genre.GenreName)
+            .ToList(),
+        Persons = m.MoviePersonRoles
+            .Select(mp => new
+            {
+                mp.Person.PersonName,
+                mp.Role.RoleName
+            })
+            .ToList()
+    })
+    .FirstOrDefaultAsync();
 ```
 
 Экаивалентен запросу к бд
 
 ```sql
-SELECT DISTINCT m.*
+SELECT
+    m.movie_id,
+    m.Title,
+    m.Description,
+    m.release_year,
+    m.title_img,
+    (SELECT GROUP_CONCAT(g.genre_name)
+     FROM genre_movie gm
+     JOIN genre g ON gm.gener_id  = g.genre_id
+     WHERE gm.movie_id = m.movie_id) AS Genres,
+    (SELECT GROUP_CONCAT( CONCAT( p.person_name, ' (', r.role_name,')'))
+     FROM movie_person_role mpr
+     JOIN person p ON mpr.person_id = p.person_id
+     JOIN role r ON mpr.role_id = r.role_id
+     WHERE mpr.movie_id = m.movie_id) AS Persons
+FROM movie m
+WHERE m.movie_id = 1;
+```
+linq выражение отвечающие за нахождения фильмов по названию, имени актеров и жанру
+```С#
+var moviesData = await _dbContext.Movies
+    .AsNoTracking()
+    .Include(m => m.GenreMovies)
+        .ThenInclude(gm => gm.Genre)
+    .Include(m => m.MoviePersonRoles)
+        .ThenInclude(mpr => mpr.Person)
+    .Include(m => m.MoviePersonRoles)
+        .ThenInclude(mpr => mpr.Role)
+    .Where(m => searchTerms.Any(term =>
+        EF.Functions.Like(m.Title, "%" + term + "%") ||
+        m.MoviePersonRoles.Any(mpr => EF.Functions.Like(mpr.Person.PersonName, "%" + term + "%")) ||
+        m.GenreMovies.Any(gm => EF.Functions.Like(gm.Genre.GenreName, "%" + term + "%"))
+    ))
+    .Take(limit)
+    .Select(m => new
+    {
+        m.MovieId,
+        m.Title,
+        Genres = m.GenreMovies
+            .Select(gm => gm.Genre.GenreName)
+            .ToList(),
+        Persons = m.MoviePersonRoles
+            .Select(p => new
+            {
+                p.Person.PersonName,
+                RoleName = p.Role.RoleName
+            })
+            .ToList()
+    })
+    .ToListAsync();
+```
+Экаивалентен запросу к бд
+
+```sql
+SELECT m.movie_id, m.title,
+GROUP_CONCAT(g.genre_name) AS Genres,
+GROUP_CONCAT(p.person_name || ' (' || r.role_name || ')') AS Persons
 FROM movie m
 LEFT JOIN movie_person_role mpr ON m.movie_id = mpr.movie_id
 LEFT JOIN person p ON mpr.person_id = p.person_id
-LEFT JOIN genre_movie mg ON m.movie_id = mg.movie_id
-LEFT JOIN genre g ON mg.gener_id = g.genre_id
-WHERE (
-    LOWER(m.title) LIKE '%matrix%' OR
-    LOWER(p.person_name) LIKE '%matrix%' OR
-    LOWER(g.genre_name) LIKE '%matrix%'
-)
-OR (
-    LOWER(m.title) LIKE '%neo%' OR
-    LOWER(p.person_name) LIKE '%neo%' OR
-    LOWER(g.genre_name) LIKE '%neo%'
-);
+LEFT JOIN role r ON mpr.role_id = r.role_id
+LEFT JOIN genre_movie gm ON m.movie_id = gm.movie_id
+LEFT JOIN genre g ON gm.gener_id  = g.genre_id
+WHERE LOWER(m.title) LIKE '%matrix%'
+GROUP BY m.movie_id, m.title
+LIMIT 1;
 ```
-
-В этом запросе к бд параметры вводились в ручную т.к. Sqlite не поддерживает DECLARE 
 
 ## Порядок развертывания
 
@@ -78,7 +134,7 @@ OR (
 dotnet restore
 ```
 
-##Тестирование 
+## Тестирование 
 ```bash
 dotnet test
 ```
